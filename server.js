@@ -122,6 +122,6 @@ app.get('/', (req, res) => {
 
 debug(`port: ${port}`);
 
-app.listen((port) => {
+app.listen(port, () => {
   debug(`listening on ${port}`);
 })
