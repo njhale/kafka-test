@@ -64,32 +64,45 @@ let a = argv.a || 0;
 debug('Wiring producer event handlers...');
 
 producer.on('ready', () => {
-  debug('Producer ready, sending messages every 4 seconds...');
+  debug('Producer ready, creating topics...');
 
-  // Send messages every 4 seconds
-  let i = 0;
+  // Create topics sync
+  producer.createTopics([topic], (err, data) => {
+    if (err) {
+      debug(`An error has occurred while attempting to create topics: ${err}`);
+    }
 
-  setInterval(() => {
-    let message = `Hello World! ${i}`;
-    let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
-    debug(`Sending message ${message}`);
+    debug(`Data on topic create: ${data}`);
 
-    producer.send([
-      {
-        topic: topic,
-        partition: p,
-        messages: [message, keyedMessage],
-        attributes: a
-      }], (err, result) => {
-        if (err) {
-          debug(`An error has occurred while attempting to send a message: ${err}`);
-        } else {
-          debug(`Message successfully sent: ${result}`);
-        }
+    debug('Topics created, sending messages every 4 seconds...');
 
-      });
-    i++;
-  }, 4000);
+    // Send messages every 4 seconds
+    let i = 0;
+
+    setInterval(() => {
+      let message = `Hello World! ${i}`;
+      let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
+      debug(`Sending message ${message}`);
+
+      producer.send([
+        {
+          topic: topic,
+          partition: p,
+          messages: [message, keyedMessage],
+          attributes: a
+        }], (err, result) => {
+          if (err) {
+            debug(`An error has occurred while attempting to send a message: ${err}`);
+          } else {
+            debug(`Message successfully sent: ${result}`);
+          }
+
+        });
+      i++;
+    }, 4000);
+
+  });
+
 
 });
 
