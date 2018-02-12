@@ -4,15 +4,15 @@
 let app = require('express')();
 let debug = require('debug')('kafka-test');
 let argv = require('optimist').argv;
-
 // first configure the logger provider
-let kafkaLogging = require('kafka-node/logging');
-kafkaLogging.setLoggerProvider(debug);
+
+// let kafkaLogging = require('kafka-node/logging');
+// kafkaLogging.setLoggerProvider(debug);
 
 let kafka = require('kafka-node');
 let Consumer = kafka.Consumer;
 let Offset = kafka.Offset;
-let Client = kafka.Client;
+let KafkaClient = kafka.KafkaClient;
 var Producer = kafka.Producer;
 let KeyedMessage = kafka.KeyedMessage;
 
@@ -28,7 +28,7 @@ let port = 8080;
 
 debug(`kafkaHost: ${kafkaHost}`);
 
-let client = new Client(kafkaHost);
+let client = new KafkaClient({ kafkaHost: kafkaHost });
 let topics = [{ topic: topic, partition: 1 }, { topic: topic, partition: 0 }];
 let options = {
   groupId: groupId,
