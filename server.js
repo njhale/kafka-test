@@ -5,6 +5,10 @@ let app = require('express')();
 let debug = require('debug')('kafka-test');
 let argv = require('optimist').argv;
 
+// first configure the logger provider
+let kafkaLogging = require('kafka-node/logging');
+kafkaLogging.setLoggerProvider(debug);
+
 let kafka = require('kafka-node');
 let Consumer = kafka.Consumer;
 let Offset = kafka.Offset;
@@ -22,6 +26,7 @@ let consumerId = `${process.env.POD_NAMESPACE}.${process.env.POD_NAME}`;
 
 let port = 8080;
 
+debug(`kafkaHost: ${kafkaHost}`);
 
 let client = new Client(kafkaHost);
 let topics = [{ topic: topic, partition: 1 }, { topic: topic, partition: 0 }];
@@ -33,8 +38,12 @@ let options = {
   fetchMaxBytes: 1024 * 1024  // 1 MB
 }
 
+debug('setting consumer and offset...');
+
 let consumer = new Consumer(client, topics, options);
 let offset = new Offset(client);
+
+debug('consumer and offset set');
 
 // Wire kafka consumer event handlers
 
@@ -52,11 +61,16 @@ let a = argv.a || 0;
 
 // Wire kafka producer event handlers
 
+debug('Wiring producer event handlers...');
+
 producer.on('ready', () => {
+  debug('Producer ready, sending 1000 messages...');
+
   // Send 1000 messages
   for (let i = 0; i < 1000; i++) {
     let message = `Hello World! ${i}`;
     let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
+    debug(`Sending message ${message}`);
 
     producer.send([
       {
@@ -97,6 +111,7 @@ producer.on('error', function (err) {
 //
 // });
 
+debug('Producer event handlers wired');
 
 // Wire express request handlers
 
@@ -105,6 +120,8 @@ app.get('/', (req, res) => {
   res.status(200).end();
 });
 
+debug(`port: ${port}`);
+
 app.listen((port) => {
-  debug('listening on ${port}');
+  debug(`listening on ${port}`);
 })
