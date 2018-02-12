@@ -14,14 +14,14 @@ let Consumer = kafka.Consumer;
 let Offset = kafka.Offset;
 let KafkaClient = kafka.KafkaClient;
 let Client = kafka.Client;
-var Producer = kafka.Producer;
+let Producer = kafka.Producer;
 let KeyedMessage = kafka.KeyedMessage;
-
+let ConsumerGroup = kafka.ConsumerGroup;
 
 let kafkaHost = process.env.KAFKA_HOST
-  || 'my-cluster-kafka-headless.kafka.svc:9092';
+  || 'my-cluster-kafka.kafka.svc:9092';
 let zkHost = process.env.ZK_HOST
-  || 'my-cluster-zookeeper-headless.kafka.svc:2181';
+  || 'my-cluster-zookeeper.kafka.svc:2181';
 let topic = process.env.POD_NAMESPACE != null ?
   `${process.env.POD_NAMESPACE}.dropbox.drop` : 'localhost.dropbox.drop';
 let groupId = 'group.dropbox';
@@ -34,13 +34,39 @@ debug(`kafkaHost: ${kafkaHost}`);
 // let client = new Client(zkHost);
 let client = new KafkaClient({ kafkaHost: kafkaHost });
 let topics = [{ topic: topic, partition: 1 }, { topic: topic, partition: 0 }];
+// let options = {
+//   groupId: groupId,
+//   id: consumerId,
+//   autoCommit: false,
+//   fetchMaxWaitMs: 1000,  // 1 second
+//   fetchMaxBytes: 1024 * 1024  // 1 MB
+// }
+
 let options = {
+  host: zkHost,
+  kafkaHost: kafkaHost,
+  zk: undefined,
+  batch: undefined,
+  ssl: false,
   groupId: groupId,
-  id: consumerId,
-  autoCommit: false,
-  fetchMaxWaitMs: 1000,  // 1 second
-  fetchMaxBytes: 1024 * 1024  // 1 MB
+  sessionTimeout: 15000,
+  protocol: ['roundrobin'],
+  fromOffset: 'latest',
+  outOfRangeOffset: 'earliest',
+  migrateHLC: false,
+  migrateRolling: true,
+  id: consumerId
 }
+
+let consumerGroup = new ConsumerGroup(options, topic);
+
+consumerGroup.on('error', (err) => {
+  debug(`Consumer ${consumerId} has encountered an error: ${err}`);
+});
+
+consumerGroup.on('message', (message) => {
+  debug(`Consumer ${consumerId} has received a message: ${message}`);
+});
 
 let producer = new Producer(client, { requireAcks: 1 });
 let p = argv.p || 0;
@@ -61,22 +87,22 @@ producer.on('ready', () => {
 
     debug(`Data on topic create: ${data}`);
 
-    debug('setting consumer and offset...');
-
-    let consumer = new Consumer(client, topics, options);
-    let offset = new Offset(client);
-
-    debug('consumer and offset set');
-
-    // Wire kafka consumer event handlers
-
-    consumer.on('message', (message) => {
-      debug(`A message has been retrieved from kafka: ${message}`);
-    });
-
-    consumer.on('error', (err) => {
-      debug(`An error has occurred with the kafka consumer: ${err}`);
-    });
+    // debug('setting consumer and offset...');
+    //
+    // let consumer = new Consumer(client, topics, options);
+    // let offset = new Offset(client);
+    //
+    // debug('consumer and offset set');
+    //
+    // // Wire kafka consumer event handlers
+    //
+    // consumer.on('message', (message) => {
+    //   debug(`A message has been retrieved from kafka: ${message}`);
+    // });
+    //
+    // consumer.on('error', (err) => {
+    //   debug(`An error has occurred with the kafka consumer: ${err}`);
+    // });
 
     debug('Topics created, sending messages every 4 seconds...');
 
