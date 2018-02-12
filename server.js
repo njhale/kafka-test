@@ -13,12 +13,15 @@ let kafka = require('kafka-node');
 let Consumer = kafka.Consumer;
 let Offset = kafka.Offset;
 let KafkaClient = kafka.KafkaClient;
+let Client = kafka.Client;
 var Producer = kafka.Producer;
 let KeyedMessage = kafka.KeyedMessage;
 
 
 let kafkaHost = process.env.KAFKA_HOST
   || 'my-cluster-kafka.kafka.svc.cluster.local:9092';
+let zkHost = process.env.ZK_HOST
+  || 'my-cluster-zookeeper.kafka.svc.cluster.local:2181';
 let topic = process.env.POD_NAMESPACE != null ?
   `${process.env.POD_NAMESPACE}.dropbox.drop` : 'localhost.dropbox.drop';
 let groupId = 'group.dropbox';
@@ -28,7 +31,7 @@ let port = 8080;
 
 debug(`kafkaHost: ${kafkaHost}`);
 
-let client = new KafkaClient({ kafkaHost: kafkaHost });
+let client = new Client(zkHost);// new KafkaClient({ kafkaHost: kafkaHost });
 let topics = [{ topic: topic, partition: 1 }, { topic: topic, partition: 0 }];
 let options = {
   groupId: groupId,
@@ -73,7 +76,7 @@ producer.on('ready', () => {
     consumer.on('error', (err) => {
       debug(`An error has occurred with the kafka consumer: ${err}`);
     });
-    
+
     debug('Topics created, sending messages every 4 seconds...');
 
     // Send messages every 4 seconds
@@ -81,20 +84,20 @@ producer.on('ready', () => {
 
     setInterval(() => {
       let message = `Hello World! ${i}`;
-      let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
+      // let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
       debug(`Sending message ${message}`);
 
       producer.send([
         {
           topic: topic,
           partition: p,
-          messages: [message, keyedMessage],
+          messages: [message],
           attributes: a
         }], (err, result) => {
           if (err) {
             debug(`An error has occurred while attempting to send a message: ${err}`);
           } else {
-            debug(`Message successfully sent: ${result}`);
+            debug(`Message successfully sent: ${JSON.stringify(result)}`);
           }
 
         });
