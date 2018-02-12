@@ -19,9 +19,9 @@ let KeyedMessage = kafka.KeyedMessage;
 
 
 let kafkaHost = process.env.KAFKA_HOST
-  || 'my-cluster-kafka.kafka.svc.cluster.local:9092';
+  || 'my-cluster-kafka-headless.kafka.svc:9092';
 let zkHost = process.env.ZK_HOST
-  || 'my-cluster-zookeeper.kafka.svc.cluster.local:2181';
+  || 'my-cluster-zookeeper-headless.kafka.svc:2181';
 let topic = process.env.POD_NAMESPACE != null ?
   `${process.env.POD_NAMESPACE}.dropbox.drop` : 'localhost.dropbox.drop';
 let groupId = 'group.dropbox';
@@ -31,7 +31,8 @@ let port = 8080;
 
 debug(`kafkaHost: ${kafkaHost}`);
 
-let client = new Client(zkHost);// new KafkaClient({ kafkaHost: kafkaHost });
+// let client = new Client(zkHost);
+let client = new KafkaClient({ kafkaHost: kafkaHost });
 let topics = [{ topic: topic, partition: 1 }, { topic: topic, partition: 0 }];
 let options = {
   groupId: groupId,
