@@ -65,7 +65,7 @@ consumerGroup.on('error', (err) => {
 });
 
 consumerGroup.on('message', (message) => {
-  debug(`Consumer ${consumerId} has received a message: ${message}`);
+  debug(`Consumer ${consumerId} has received a message: ${JSON.stringify(message)}`);
 });
 
 let producer = new Producer(client, { requireAcks: 1 });
