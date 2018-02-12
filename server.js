@@ -64,10 +64,12 @@ let a = argv.a || 0;
 debug('Wiring producer event handlers...');
 
 producer.on('ready', () => {
-  debug('Producer ready, sending 1000 messages...');
+  debug('Producer ready, sending messages every 4 seconds...');
 
-  // Send 1000 messages
-  for (let i = 0; i < 1000; i++) {
+  // Send messages every 4 seconds
+  let i = 0;
+
+  setInterval(() => {
     let message = `Hello World! ${i}`;
     let keyedMessage = new KeyedMessage('keyed', `A keyed Hello World! ${i}`);
     debug(`Sending message ${message}`);
@@ -86,8 +88,8 @@ producer.on('ready', () => {
         }
 
       });
-
-  }
+    i++;
+  }, 4000);
 
 });
 
