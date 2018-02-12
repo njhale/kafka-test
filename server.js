@@ -38,23 +38,6 @@ let options = {
   fetchMaxBytes: 1024 * 1024  // 1 MB
 }
 
-debug('setting consumer and offset...');
-
-let consumer = new Consumer(client, topics, options);
-let offset = new Offset(client);
-
-debug('consumer and offset set');
-
-// Wire kafka consumer event handlers
-
-consumer.on('message', (message) => {
-  debug(`A message has been retrieved from kafka: ${message}`);
-});
-
-consumer.on('error', (err) => {
-  debug(`An error has occurred with the kafka consumer: ${err}`);
-});
-
 let producer = new Producer(client, { requireAcks: 1 });
 let p = argv.p || 0;
 let a = argv.a || 0;
@@ -74,6 +57,23 @@ producer.on('ready', () => {
 
     debug(`Data on topic create: ${data}`);
 
+    debug('setting consumer and offset...');
+
+    let consumer = new Consumer(client, topics, options);
+    let offset = new Offset(client);
+
+    debug('consumer and offset set');
+
+    // Wire kafka consumer event handlers
+
+    consumer.on('message', (message) => {
+      debug(`A message has been retrieved from kafka: ${message}`);
+    });
+
+    consumer.on('error', (err) => {
+      debug(`An error has occurred with the kafka consumer: ${err}`);
+    });
+    
     debug('Topics created, sending messages every 4 seconds...');
 
     // Send messages every 4 seconds
